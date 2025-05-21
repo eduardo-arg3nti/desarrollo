@@ -1,0 +1,31 @@
+CARTA DOCUMENTO
+
+REMITENTE:
+Nombre: [NOMBRE_REMITENTE]
+DNI: [DNI_REMITENTE]
+Domicilio: [DOMICILIO_REMITENTE]
+
+DESTINATARIO:
+Nombre: [NOMBRE_DESTINATARIO]
+Domicilio: [DOMICILIO_DESTINATARIO]
+
+[LUGAR_Y_FECHA_CARTA]
+
+Asunto: [ASUNTO_CARTA]
+
+De mi mayor consideración:
+
+Me dirijo a Ud. en mi carácter de [CARACTER_REMITENTE] a fin de intimarle formalmente a que en el plazo perentorio e improrrogable de [PLAZO_HORAS_DIAS] horas/días de recibida la presente, proceda a [ACCION_REQUERIDA_DESTINATARIO].
+
+El presente requerimiento se formula bajo apercibimiento de [APERCIBIMIENTO_CONSECUENCIAS] en caso de incumplimiento o silencio de su parte.
+
+La presente intimación se basa en los siguientes hechos:
+[HECHOS_CARTA_DOCUMENTO]
+
+Asimismo, se le hace saber que [INFORMACION_ADICIONAL_RELEVANTE].
+
+Queda Ud. debidamente notificado.
+
+Sin otro particular, saludo a Ud. atentamente.
+
+[FIRMA_REMITENTE]

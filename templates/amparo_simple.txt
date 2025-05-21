@@ -1,0 +1,42 @@
+RECURSO DE AMPARO
+
+JUEZ COMPETENTE: [JUEZ_COMPETENTE]
+EXPEDIENTE NRO: [NUMERO_EXPEDIENTE] (Si aplica)
+
+ACTOR: [NOMBRE_ACTOR], DNI [DNI_ACTOR], con domicilio real en [DOMICILIO_ACTOR], y constituyendo domicilio procesal en [DOMICILIO_PROCESAL_ACTOR], bajo patrocinio letrado del Dr./Dra. [NOMBRE_ABOGADO_ACTOR], T° [TOMO_ABOGADO] F° [FOLIO_ABOGADO] CUIT [CUIT_ABOGADO].
+
+DEMANDADO: [NOMBRE_DEMANDADO], con domicilio en [DOMICILIO_DEMANDADO].
+
+OBJETO:
+Que vengo por medio del presente a interponer formal Recurso de Amparo en los términos del art. 43 de la Constitución Nacional y ley 16.986, contra [NOMBRE_DEMANDADO], a fin de que se declare la ilegalidad y arbitrariedad manifiesta de [ACTO_LESIVO_DESCRIPCION_BREVE].
+
+HECHOS:
+Los hechos que fundamentan la presente acción son los siguientes:
+[HECHOS_PRINCIPALES]
+
+DERECHO:
+Fundo el derecho de mi parte en las siguientes disposiciones legales:
+- Constitución Nacional: Art. 43.
+- Ley 16.986 de Amparo.
+- [ARTICULOS_FUNDAMENTALES_ADICIONALES]
+- Jurisprudencia aplicable: [JURISPRUDENCIA_RELEVANTE]
+
+PRUEBA:
+Ofrezco la siguiente prueba:
+- Documental: [PRUEBA_DOCUMENTAL_DETALLE]
+- Testimonial: (Si aplica) [PRUEBA_TESTIMONIAL_DETALLE]
+- Pericial: (Si aplica) [PRUEBA_PERICIAL_DETALLE]
+
+PETITORIO:
+Por todo lo expuesto, a V.S. solicito:
+1. Se tenga por interpuesto en tiempo y forma el presente Recurso de Amparo.
+2. Se corra traslado de la demanda al demandado.
+3. Se haga lugar a la medida cautelar solicitada de [MEDIDA_CAUTELAR_SOLICITADA] (Si aplica).
+4. Oportunamente, se dicte sentencia haciendo lugar al amparo, declarando la ilegalidad de [ACTO_LESIVO_DECLARACION] y ordenando [ORDEN_JUDICIAL_ESPERADA].
+
+SERÁ JUSTICIA.
+
+[LUGAR_Y_FECHA]
+
+[FIRMA_ACTOR]
+[FIRMA_ABOGADO_ACTOR]

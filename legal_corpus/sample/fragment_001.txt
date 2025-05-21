@@ -1,0 +1,3 @@
+Este es un archivo de prueba TXT.
+Contiene texto simple para verificar la extracción.
+Tiene múltiples líneas.

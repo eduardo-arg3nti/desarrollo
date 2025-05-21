@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Nuevo Pedido de Delivery{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <h1>Nuevo Pedido de Delivery</h1>
+
+    <form method="post" action="{% url 'ventas:gestion_delivery' %}" id="deliveryForm">
+        {% csrf_token %}
+        <div class="row">
+            <!-- Columna de Datos del Cliente y Carrito -->
+            <div class="col-md-5 order-md-2">
+                <h4 class="mb-3">Datos del Cliente</h4>
+                <div class="card p-3 mb-3 shadow-sm">
+                    <div class="mb-3">
+                        <label for="cliente_nombre" class="form-label">Nombre del Cliente</label>
+                        <input type="text" class="form-control" id="cliente_nombre" name="cliente_nombre" value="{{ cliente_data_form.cliente_nombre }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cliente_direccion" class="form-label">Dirección de Entrega</label>
+                        <input type="text" class="form-control" id="cliente_direccion" name="cliente_direccion" value="{{ cliente_data_form.cliente_direccion }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="cliente_telefono" class="form-label">Teléfono de Contacto</label>
+                        <input type="tel" class="form-control" id="cliente_telefono" name="cliente_telefono" value="{{ cliente_data_form.cliente_telefono }}" required>
+                    </div>
+                </div>
+
+                <h4 class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-primary">Tu Pedido</span>
+                    <span class="badge bg-primary rounded-pill">{{ cart_items|length }}</span>
+                </h4>
+                {% if cart_items %}
+                <ul class="list-group mb-3">
+                    {% for item in cart_items %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="my-0">{{ item.nombre }}</h6>
+                                <small class="text-muted">Cantidad: {{ item.cantidad }} x ${{ item.precio_unitario|floatformat:2 }}</small>
+                            </div>
+                            <span class="text-muted">${{ item.subtotal|floatformat:2 }}</span>
+                        </div>
+                        <!-- Controles para actualizar cantidad o eliminar -->
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="input-group input-group-sm" style="max-width: 150px;">
+                                 <input type="number" name="cantidad_update_{{ item.producto_id }}" 
+                                       id="cantidad_update_{{ item.producto_id }}"
+                                       value="{{ item.cantidad }}" min="0" class="form-control form-control-sm">
+                                <button type="submit" name="action" value="update_delivery_cart_item"
+                                        formaction="{% url 'ventas:gestion_delivery' %}?producto_id_manual={{ item.producto_id }}"
+                                        class="btn btn-sm btn-outline-secondary">Actualizar</button>
+                            </div>
+                            <button type="submit" name="action" value="remove_from_delivery_cart_item"
+                                    formaction="{% url 'ventas:gestion_delivery' %}?producto_id_manual={{ item.producto_id }}"
+                                    class="btn btn-sm btn-outline-danger">Quitar</button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between bg-light">
+                        <span class="fw-bold">Total (USD)</span>
+                        <strong class="fw-bold">${{ cart_total|floatformat:2 }}</strong>
+                    </li>
+                </ul>
+                <div class="d-grid gap-2">
+                    <button type="submit" name="action" value="register_delivery_order" class="btn btn-success btn-lg">
+                        <i class="fas fa-motorcycle"></i> Registrar Pedido de Delivery
+                    </button>
+                    <button type="submit" name="action" value="clear_delivery_cart" class="btn btn-danger" 
+                            onclick="return confirm('¿Está seguro de que desea limpiar el carrito de delivery?');">
+                        <i class="fas fa-trash"></i> Limpiar Carrito de Delivery
+                    </button>
+                </div>
+                {% else %}
+                <p class="text-muted">El carrito de delivery está vacío.</p>
+                {% endif %}
+            </div>
+
+            <!-- Columna de Selección de Productos -->
+            <div class="col-md-7 order-md-1">
+                <h4 class="mb-3">Seleccionar Productos</h4>
+                <!-- Formulario de búsqueda de productos (GET, no parte del form principal POST) -->
+                <form method="get" action="{% url 'ventas:gestion_delivery' %}" id="searchProductForm" class="mb-3">
+                    <div class="input-group">
+                        <input type="text" name="q_producto" class="form-control" placeholder="Buscar producto por nombre..." value="{{ search_query_producto }}">
+                        <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                    </div>
+                </form>
+
+                {% if productos_disponibles %}
+                <div class="list-group" style="max-height: 600px; overflow-y: auto;">
+                    {% for producto in productos_disponibles %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ producto.nombre }}</h6>
+                            <small class="text-muted">Stock: {{ producto.stock_actual }}</small>
+                        </div>
+                        <small class="text-success fw-bold">Precio: ${{ producto.precio_venta|floatformat:2 }}</small>
+                        <!-- Botón para añadir al carrito (parte del form principal 'deliveryForm') -->
+                        <div class="mt-2">
+                            <div class="input-group input-group-sm" style="max-width: 180px;">
+                                <input type="number" name="cantidad_add_{{ producto.id }}" id="cantidad_add_{{ producto.id }}" class="form-control form-control-sm" value="1" min="1" max="{{ producto.stock_actual }}">
+                                <button type="submit" name="action" value="add_to_delivery_cart"
+                                        formaction="{% url 'ventas:gestion_delivery' %}?producto_id_manual={{ producto.id }}"
+                                        class="btn btn-sm btn-primary">Añadir</button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No hay productos disponibles o que coincidan con la búsqueda.</p>
+                {% endif %}
+            </div>
+        </div>
+    </form>
+
+    <!-- Formularios ocultos ya no son necesarios con el enfoque de JS y formaction -->
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const deliveryForm = document.getElementById('deliveryForm');
+    if (deliveryForm) {
+        deliveryForm.addEventListener('submit', function(event) {
+            const actionButton = event.submitter; // El botón que disparó el submit
+            if (!actionButton) return;
+
+            const action = actionButton.getAttribute('value');
+            const formactionUrl = new URL(actionButton.formAction || deliveryForm.action);
+            
+            // Extraer producto_id_manual de la URL del formaction
+            const productoIdManual = formactionUrl.searchParams.get('producto_id_manual');
+
+            if (productoIdManual) {
+                // Crear y añadir un input hidden para producto_id si no existe
+                let productoIdInput = deliveryForm.querySelector('input[name="producto_id"]');
+                if (!productoIdInput) {
+                    productoIdInput = document.createElement('input');
+                    productoIdInput.type = 'hidden';
+                    productoIdInput.name = 'producto_id';
+                    deliveryForm.appendChild(productoIdInput);
+                }
+                productoIdInput.value = productoIdManual;
+
+                // Si la acción es 'add_to_delivery_cart' o 'update_delivery_cart_item', necesitamos la cantidad
+                if (action === 'add_to_delivery_cart' || action === 'update_delivery_cart_item') {
+                    const cantidadInputId = (action === 'add_to_delivery_cart') ? `cantidad_add_${productoIdManual}` : `cantidad_update_${productoIdManual}`;
+                    const cantidadInputElement = document.getElementById(cantidadInputId);
+                    
+                    if (cantidadInputElement) {
+                        let cantidadField = deliveryForm.querySelector('input[name="cantidad"]');
+                        if(!cantidadField) {
+                            cantidadField = document.createElement('input');
+                            cantidadField.type = 'hidden';
+                            cantidadField.name = 'cantidad';
+                            deliveryForm.appendChild(cantidadField);
+                        }
+                        cantidadField.value = cantidadInputElement.value;
+                    }
+                }
+            } else {
+                // Limpiar campos de item si la acción no es específica de un item
+                // (ej. register_delivery_order, clear_delivery_cart)
+                const pIdField = deliveryForm.querySelector('input[name="producto_id"]');
+                if (pIdField) pIdField.remove();
+                const qField = deliveryForm.querySelector('input[name="cantidad"]');
+                if (qField) qField.remove();
+            }
+            
+            // Opcional: Deshabilitar botón para evitar doble submit
+            // if (actionButton) {
+            //     actionButton.disabled = true;
+            //     // Considerar añadir un spinner
+            //     setTimeout(() => { actionButton.disabled = false; }, 4000);
+            // }
+        });
+    }
+});
+</script>
+{% endblock %}

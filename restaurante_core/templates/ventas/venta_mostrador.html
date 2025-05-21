@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Venta por Mostrador{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <div class="row">
+        <!-- Columna de Productos -->
+        <div class="col-md-7">
+            <h2>Productos Disponibles</h2>
+            <form method="get" action="{% url 'ventas:venta_mostrador' %}" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Buscar producto por nombre..." value="{{ search_query }}">
+                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                </div>
+            </form>
+
+            {% if productos %}
+            <div class="list-group" style="max-height: 600px; overflow-y: auto;">
+                {% for producto in productos %}
+                <div class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">{{ producto.nombre }}</h5>
+                        <small class="text-muted">Stock: {{ producto.stock_actual }}</small>
+                    </div>
+                    <p class="mb-1">{{ producto.descripcion|truncatewords:15|default_if_none:"" }}</p>
+                    <small class="text-success fw-bold">Precio: ${{ producto.precio_venta|floatformat:2 }}</small>
+                    <!-- Botón para añadir al carrito (parte del form principal 'cartModificationForm') -->
+                    <div class="mt-2">
+                        <div class="input-group input-group-sm" style="max-width: 180px;">
+                            <input type="number" name="cantidad_add_{{ producto.id }}" class="form-control" value="1" min="1" max="{{ producto.stock_actual }}" id="cantidad_add_{{ producto.id }}">
+                            <button type="submit" name="action" value="add_to_cart" 
+                                    form="cartModificationForm" 
+                                    formaction="{% url 'ventas:venta_mostrador' %}?producto_id_manual={{ producto.id }}" 
+                                    class="btn btn-sm btn-primary">Añadir</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No hay productos disponibles que coincidan con su búsqueda o todos están agotados.</p>
+            {% endif %}
+        </div>
+
+        <!-- Columna del Carrito -->
+        <div class="col-md-5">
+            <h2>Carrito de Compras</h2>
+            <form method="post" action="{% url 'ventas:venta_mostrador' %}" id="cartModificationForm">
+                {% csrf_token %}
+                {% if cart_items %}
+                <ul class="list-group mb-3">
+                    {% for item in cart_items %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between lh-sm">
+                            <div>
+                                <h6 class="my-0">{{ item.nombre }}</h6>
+                                <small class="text-muted">${{ item.precio_unitario|floatformat:2 }} / unidad</small>
+                            </div>
+                            <span class="text-muted fw-bold">${{ item.subtotal|floatformat:2 }}</span>
+                        </div>
+                        <!-- Controles para actualizar cantidad o eliminar -->
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="input-group input-group-sm" style="max-width: 150px;">
+                                <input type="number" name="cantidad_update_{{ item.producto_id }}" 
+                                       id="cantidad_update_{{ item.producto_id }}"
+                                       value="{{ item.cantidad }}" min="0" class="form-control form-control-sm">
+                                <button type="submit" name="action" value="update_cart_item" 
+                                        formaction="{% url 'ventas:venta_mostrador' %}?producto_id_manual={{ item.producto_id }}"
+                                        class="btn btn-sm btn-outline-secondary">Actualizar</button>
+                            </div>
+                            <button type="submit" name="action" value="remove_from_cart" 
+                                    formaction="{% url 'ventas:venta_mostrador' %}?producto_id_manual={{ item.producto_id }}"
+                                    class="btn btn-sm btn-outline-danger">Quitar</button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between bg-light">
+                        <span class="fw-bold">Total (USD)</span>
+                        <strong class="fw-bold">${{ cart_total|floatformat:2 }}</strong>
+                    </li>
+                </ul>
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" name="action" value="register_sale" class="btn btn-success btn-lg">Registrar Venta</button>
+                    <button type="submit" name="action" value="clear_cart" class="btn btn-danger" 
+                            onsubmit="return confirm('¿Está seguro de que desea limpiar el carrito?');">Limpiar Carrito</button>
+                </div>
+
+                {% else %}
+                <p class="text-muted">El carrito está vacío.</p>
+                {% endif %}
+            </form> <!-- Fin de cartModificationForm -->
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Script para evitar doble submit o manejar estados de carga si fuera necesario (opcional)
+// Por ejemplo, deshabilitar botones al enviar el formulario.
+document.addEventListener('DOMContentLoaded', function() {
+    const forms = document.querySelectorAll('form[method="post"]');
+    forms.forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitButton = form.querySelector('button[type="submit"]');
+            if (submitButton) {
+                // submitButton.disabled = true;
+                // Podría añadirse un spinner o texto de "Procesando..."
+                // setTimeout(() => { submitButton.disabled = false; }, 3000); // Reactivar después de un tiempo
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

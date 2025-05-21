@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+
+{% block title %}Gestionar Pedido - Mesa {{ mesa.numero_mesa }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <h1 class="mb-3">
+        Gestionar Pedido: Mesa {{ mesa.numero_mesa }} 
+        <span class="badge {{ mesa.color_class|default:'bg-secondary' }}">{{ mesa.get_estado_display }}</span>
+    </h1>
+
+    {% if mesa.estado == 'reservada' %}
+    <div class="alert alert-info">
+        Esta mesa está reservada. 
+        <!-- Aquí podría haber un botón para "Confirmar y Ocupar" que inicie el pedido -->
+        <form method="post" action="." class="d-inline">
+            {% csrf_token %}
+            <!-- Podría haber una acción específica para esto, o se asume que guardar pedido la ocupa -->
+            <!-- <button type="submit" name="action" value="ocupar_mesa_reservada" class="btn btn-sm btn-primary">Confirmar y Abrir Pedido</button> -->
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Columna de Selección de Productos -->
+        <div class="col-md-5">
+            <h4>Añadir Productos al Pedido</h4>
+            <form method="get" action="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}" class="mb-3">
+                <div class="input-group">
+                    <input type="text" name="q_producto" class="form-control" placeholder="Buscar producto..." value="{{ search_query_producto }}">
+                    <button class="btn btn-outline-secondary" type="submit">Buscar</button>
+                </div>
+            </form>
+
+            {% if productos_disponibles %}
+            <div class="list-group" style="max-height: 400px; overflow-y: auto;">
+                {% for producto in productos_disponibles %}
+                <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">{{ producto.nombre }}</h6>
+                        <small class="text-muted">Stock: {{ producto.stock_actual }}</small>
+                    </div>
+                    <small class="text-success fw-bold">Precio: ${{ producto.precio_venta|floatformat:2 }}</small>
+                    <!-- Botón para añadir al pedido (parte del form principal 'pedidoMesaForm') -->
+                    <div class="mt-2">
+                        <div class="input-group input-group-sm" style="max-width: 180px;">
+                            <input type="number" name="cantidad_add_{{ producto.id }}" id="cantidad_add_{{ producto.id }}" class="form-control form-control-sm" value="1" min="1" max="{{ producto.stock_actual }}">
+                            <button type="submit" name="action" value="add_to_pedido_mesa"
+                                    form="pedidoMesaForm"
+                                    formaction="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}?producto_id_manual={{ producto.id }}"
+                                    class="btn btn-sm btn-primary">Añadir</button>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p>No hay productos disponibles o que coincidan con la búsqueda.</p>
+            {% endif %}
+        </div>
+
+        <!-- Columna del Pedido Actual y Carrito de Sesión -->
+        <div class="col-md-7">
+            <h4>Pedido de la Mesa</h4>
+            <form method="post" action="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}" id="pedidoMesaForm">
+                {% csrf_token %}
+                <!-- Items ya guardados en la Venta -->
+                {% if pedido_actual_items %}
+                <h5>Items Guardados en Pedido #{{ venta_actual.pk }}</h5>
+                <ul class="list-group mb-3">
+                    {% for item in pedido_actual_items %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between lh-sm">
+                            <div>
+                                <h6 class="my-0">{{ item.nombre }}</h6>
+                                <small class="text-muted">${{ item.precio_unitario|floatformat:2 }} / unidad</small>
+                            </div>
+                            <span class="text-muted fw-bold">${{ item.subtotal|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="input-group input-group-sm" style="max-width: 180px;">
+                                <input type="number" name="cantidad_update_detalle_{{ item.detalle_id }}" 
+                                       id="cantidad_update_detalle_{{ item.detalle_id }}"
+                                       value="{{ item.cantidad }}" min="0" class="form-control form-control-sm" aria-label="Nueva cantidad">
+                                <button type="submit" name="action" value="update_pedido_existente_item"
+                                        formaction="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}?detalle_id_manual={{ item.detalle_id }}"
+                                        class="btn btn-sm btn-outline-secondary">Modificar</button>
+                            </div>
+                            <!-- Eliminar un item existente es setting cantidad a 0 y luego Modificar -->
+                        </div>
+                    </li>
+                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between bg-light-subtle">
+                        <span class="fw-bold">Subtotal Pedido Guardado:</span>
+                        <strong>${{ current_total|floatformat:2 }}</strong>
+                    </li>
+                </ul>
+                {% elif mesa.venta_actual %}
+                <p class="text-muted">El pedido actual (#{{ mesa.venta_actual.pk }}) está vacío.</p>
+                {% endif %}
+
+                <!-- Items en el carrito de sesión (aún no guardados en la Venta) -->
+                {% if cart_items %}
+                <h5>Items Nuevos (sin guardar):</h5>
+                <ul class="list-group mb-3">
+                    {% for item in cart_items %}
+                    <li class="list-group-item">
+                        <div class="d-flex justify-content-between lh-sm">
+                            <div>
+                                <h6 class="my-0">{{ item.nombre }} <span class="badge bg-info text-dark">Nuevo</span></h6>
+                                <small class="text-muted">${{ item.precio_unitario|floatformat:2 }} / unidad</small>
+                            </div>
+                            <span class="text-muted fw-bold">${{ item.subtotal|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="input-group input-group-sm" style="max-width: 180px;">
+                                <input type="number" name="cantidad_update_cart_{{ item.producto_id }}" 
+                                       id="cantidad_update_cart_{{ item.producto_id }}"
+                                       value="{{ item.cantidad }}" min="0" class="form-control form-control-sm">
+                                <button type="submit" name="action" value="update_cart_mesa_item"
+                                        formaction="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}?producto_id_manual={{ item.producto_id }}"
+                                        class="btn btn-sm btn-outline-secondary">Actualizar</button>
+                            </div>
+                            <button type="submit" name="action" value="remove_from_cart_mesa_item"
+                                    formaction="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}?producto_id_manual={{ item.producto_id }}"
+                                    class="btn btn-sm btn-outline-danger">Quitar</button>
+                        </div>
+                    </li>
+                    {% endfor %}
+                    <li class="list-group-item d-flex justify-content-between bg-info-subtle">
+                        <span class="fw-bold">Subtotal Carrito Sesión:</span>
+                        <strong>${{ cart_total|floatformat:2 }}</strong>
+                    </li>
+                </ul>
+                {% endif %}
+
+                <!-- Total Combinado y Acciones Principales -->
+                {% if pedido_actual_items or cart_items %}
+                <div class="card p-3 mb-3 shadow-sm">
+                    <div class="d-flex justify-content-between">
+                        <h4 class="fw-bold">Total General Estimado:</h4>
+                        <h4 class="fw-bold">${{ combined_total|floatformat:2 }}</h4>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mb-2">
+                    <button type="submit" name="action" value="guardar_pedido_mesa" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Guardar Pedido Actual en Mesa
+                    </button>
+                    {% if mesa.venta_actual and not cart_items %} <!-- Solo mostrar si hay venta y no hay items en carrito de sesión -->
+                    <button type="submit" name="action" value="finalizar_y_pagar_pedido_mesa" class="btn btn-success"
+                            onclick="return confirm('¿Está seguro de que desea finalizar y marcar como pagado este pedido? Esta acción liberará la mesa.');">
+                        <i class="fas fa-check-circle"></i> Finalizar y Pagar Pedido
+                    </button>
+                    {% elif cart_items %}
+                    <p class="text-warning small text-center">Guarde los items nuevos en el pedido antes de finalizar y pagar.</p>
+                    {% endif %}
+                </div>
+
+                {% if mesa.venta_actual and mesa.venta_actual.estado_pedido != 'pendiente' and mesa.venta_actual.estado_pedido != 'completado' and mesa.venta_actual.estado_pedido != 'cancelado' %}
+                <a href="{% url 'ventas:imprimir_comanda' venta_id=mesa.venta_actual.pk %}" target="_blank" class="btn btn-info w-100 mb-2">
+                    <i class="fas fa-print"></i> Imprimir Comanda
+                </a>
+                {% endif %}
+
+                {% elif mesa.estado == 'disponible' and not cart_items %}
+                    <p class="text-muted">La mesa está disponible. Añada productos para iniciar un nuevo pedido.</p>
+                {% else %}
+                    <p class="text-muted">No hay items en el pedido actual ni en el carrito de la mesa.</p>
+                {% endif %}
+            </form> <!-- Fin de pedidoMesaForm -->
+            
+            <a href="{% url 'gestion_mesas:tablero_mesas' %}" class="btn btn-secondary mt-3">
+                <i class="fas fa-arrow-left"></i> Volver al Tablero de Mesas
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pedidoMesaForm = document.getElementById('pedidoMesaForm');
+    if (pedidoMesaForm) {
+        pedidoMesaForm.addEventListener('submit', function(event) {
+            const actionButton = event.submitter;
+            if (!actionButton) return;
+
+            const action = actionButton.getAttribute('value');
+            const formactionUrl = new URL(actionButton.formAction || pedidoMesaForm.action);
+            
+            const productoIdManual = formactionUrl.searchParams.get('producto_id_manual');
+            const detalleIdManual = formactionUrl.searchParams.get('detalle_id_manual');
+
+            // Limpiar campos hidden previos
+            const existingProductoIdField = pedidoMesaForm.querySelector('input[name="producto_id"]');
+            if (existingProductoIdField) existingProductoIdField.remove();
+            const existingDetalleIdField = pedidoMesaForm.querySelector('input[name="detalle_id"]');
+            if (existingDetalleIdField) existingDetalleIdField.remove();
+            const existingCantidadField = pedidoMesaForm.querySelector('input[name="cantidad"]');
+            if (existingCantidadField) existingCantidadField.remove();
+
+            let idToProcess = null;
+            let cantidadInputId = null;
+            let idFieldName = null;
+
+            if (productoIdManual) {
+                idToProcess = productoIdManual;
+                idFieldName = 'producto_id';
+                if (action === 'add_to_pedido_mesa') {
+                    cantidadInputId = `cantidad_add_${idToProcess}`;
+                } else if (action === 'update_cart_mesa_item') {
+                    cantidadInputId = `cantidad_update_cart_${idToProcess}`;
+                }
+            } else if (detalleIdManual) {
+                idToProcess = detalleIdManual;
+                idFieldName = 'detalle_id';
+                if (action === 'update_pedido_existente_item') {
+                    cantidadInputId = `cantidad_update_detalle_${idToProcess}`;
+                }
+            }
+
+            if (idToProcess && idFieldName) {
+                const idField = document.createElement('input');
+                idField.type = 'hidden';
+                idField.name = idFieldName;
+                idField.value = idToProcess;
+                pedidoMesaForm.appendChild(idField);
+            }
+
+            if (cantidadInputId) {
+                const cantidadInputElement = document.getElementById(cantidadInputId);
+                if (cantidadInputElement) {
+                    const cantidadField = document.createElement('input');
+                    cantidadField.type = 'hidden';
+                    cantidadField.name = 'cantidad';
+                    cantidadField.value = cantidadInputElement.value;
+                    pedidoMesaForm.appendChild(cantidadField);
+                }
+            }
+            
+            // Opcional: Deshabilitar botón
+            // if (actionButton) { actionButton.disabled = true; /* ... */ }
+        });
+    }
+});
+</script>
+{% endblock %}

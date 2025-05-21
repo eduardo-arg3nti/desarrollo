@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Lista de Productos - Stock{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Lista de Productos</h2>
+    <a href="{% url 'stock:producto_create' %}" class="btn btn-primary">Añadir Nuevo Producto</a>
+</div>
+
+{% if productos_stock_bajo %}
+<div class="alert alert-warning" role="alert">
+    <h4>¡Atención! Productos con Stock Bajo:</h4>
+    <ul>
+        {% for producto in productos_stock_bajo %}
+        <li>{{ producto.nombre }} (Actual: {{ producto.stock_actual }}, Mínimo: {{ producto.stock_minimo }})</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+{% if productos %}
+<table class="table table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Precio Venta</th>
+            <th>Stock Actual</th>
+            <th>Stock Mínimo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td>{{ producto.nombre }}</td>
+            <td>{{ producto.categoria|default_if_none:"N/A" }}</td>
+            <td>${{ producto.precio_venta|floatformat:2 }}</td>
+            <td {% if producto.stock_actual <= producto.stock_minimo %}class="table-danger"{% endif %}>
+                {{ producto.stock_actual }}
+            </td>
+            <td>{{ producto.stock_minimo }}</td>
+            <td>
+                <a href="{% url 'stock:producto_update' producto.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                <form action="{% url 'stock:producto_delete' producto.pk %}" method="post" style="display: inline;" onsubmit="return confirm('¿Estás seguro de que deseas dar de baja este producto?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>,
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>No hay productos activos en el stock. <a href="{% url 'stock:producto_create' %}">Añade el primero</a>.</p>
+{% endif %}
+
+{% endblock %}

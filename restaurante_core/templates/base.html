@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Gestión Restaurante{% endblock %}</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { 
+            padding-top: 4.5rem; /* Ajustado para la altura de la navbar */
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .content-wrap {
+            flex: 1; /* Para empujar el footer hacia abajo */
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 1.5rem 0; /* Aumentar padding vertical */
+            margin-top: auto; /* Empuja el footer al final del contenedor flex */
+            border-top: 1px solid #dee2e6; /* Borde superior sutil */
+            box-shadow: 0 -0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Sombra sutil */
+        }
+        .alert-stock-bajo { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        /* Ajuste para que el container principal no sea siempre max-width 960px, 
+           sino que use más espacio si la plantilla hija lo necesita.
+           Las plantillas hijas pueden usar .container o .container-fluid */
+        /* .container { max-width: 960px; } */ 
+
+        /* Estilo para el enlace activo en la navbar */
+        .navbar-nav .nav-link.active, .navbar-nav .nav-link.show {
+            font-weight: 500; /* Un poco más de peso para el activo */
+        }
+        .dropdown-item.active, .dropdown-item:active {
+             background-color: var(--bs-primary); /* Usar color primario de Bootstrap para dropdown activo */
+             color: var(--bs-light);
+        }
+    </style>
+</head>
+<body>
+<div class="content-wrap">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}">
+                <i class="fas fa-utensils"></i> Restaurante Core
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.app_name == 'stock' %}active{% endif %}" href="{% url 'stock:producto_list' %}"><i class="fas fa-boxes"></i> Stock</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.view_name == 'gestion_mesas:tablero_mesas' %}active{% endif %}" href="{% url 'gestion_mesas:tablero_mesas' %}"><i class="fas fa-tablet-alt"></i> Mesas</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.resolver_match.app_name == 'ventas' %}active{% endif %}" href="#" id="navbarDropdownVentas" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-cash-register"></i> Ventas
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownVentas">
+                            <li><a class="dropdown-item {% if request.resolver_match.view_name == 'ventas:venta_mostrador' %}active{% endif %}" href="{% url 'ventas:venta_mostrador' %}"><i class="fas fa-store"></i> Venta Mostrador</a></li>
+                            <li><a class="dropdown-item {% if request.resolver_match.view_name == 'ventas:gestion_delivery' %}active{% endif %}" href="{% url 'ventas:gestion_delivery' %}"><i class="fas fa-motorcycle"></i> Nuevo Delivery</a></li>
+                            <li><a class="dropdown-item {% if request.resolver_match.view_name == 'ventas:lista_pedidos_delivery' %}active{% endif %}" href="{% url 'ventas:lista_pedidos_delivery' %}"><i class="fas fa-list-ul"></i> Pedidos Delivery</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.resolver_match.app_name == 'informes' %}active{% endif %}" href="#" id="navbarDropdownInformes" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-line"></i> Informes
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdownInformes">
+                            <li><a class="dropdown-item {% if request.resolver_match.view_name == 'informes:productos_mas_vendidos' %}active{% endif %}" href="{% url 'informes:productos_mas_vendidos' %}"><i class="fas fa-chart-bar"></i> Productos Más Vendidos</a></li>
+                            <!-- Otros informes aquí en el futuro -->
+                        </ul>
+                    </li>
+                    {% if user.is_staff or user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}" target="_blank"><i class="fas fa-cog"></i> Admin</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarUserDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-user"></i> {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarUserDropdown">
+                                <!-- <li><a class="dropdown-item" href="#">Mi Perfil</a></li> -->
+                                <!-- <li><hr class="dropdown-divider"></li> -->
+                                <li><a class="dropdown-item" href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Cerrar Sesión</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}?next={{request.path}}"><i class="fas fa-sign-in-alt"></i> Iniciar Sesión</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container-fluid mt-4 px-md-4 py-4"> <!-- Cambiado a container-fluid y añadido padding -->
+        {% if messages %}
+            <div class="container"> <!-- Mensajes dentro de un container normal -->
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+        {% block content %}
+        <!-- Contenido específico de la página -->
+        {% endblock %}
+    </main>
+</div> <!-- Fin de content-wrap -->
+    <footer class="footer">
+        <div class="container">
+            <p class="text-center text-muted mb-0">&copy; {% now "Y" %} Restaurante Core. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

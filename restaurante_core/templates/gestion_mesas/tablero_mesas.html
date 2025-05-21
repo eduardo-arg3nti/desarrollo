@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title|default:"Tablero de Mesas" }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">{{ page_title|default:"Tablero de Mesas" }}</h1>
+
+    {% if mesas_por_ubicacion %}
+        {% for ubicacion, mesas_en_ubicacion in mesas_por_ubicacion.items %}
+            <h3 class="mt-4 mb-3">{{ ubicacion }}</h3>
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+                {% for mesa in mesas_en_ubicacion %}
+                <div class="col">
+                    <a href="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}" class="text-decoration-none">
+                        <div class="card text-center shadow-sm mesa-card {{ mesa.color_class|default:'bg-light' }}" 
+                             style="min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 0.5rem; transition: transform 0.2s ease-in-out;"
+                             onmouseover="this.style.transform='scale(1.03)';" 
+                             onmouseout="this.style.transform='scale(1)';">
+                            
+                            
+                            <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                                <h5 class="card-title fw-bold fs-4 mb-2">{{ mesa.numero_mesa }}</h5>
+                                <p class="card-text mb-1"><i class="fas fa-users"></i> Cap: {{ mesa.capacidad }}</p>
+                                <p class="card-text mb-2">
+                                    <small>
+                                        {% if mesa.estado == 'disponible' %}
+                                            <i class="fas fa-check-circle text-success-emphasis"></i>
+                                        {% elif mesa.estado == 'ocupada' %}
+                                            <i class="fas fa-user-clock text-danger-emphasis"></i>
+                                        {% elif mesa.estado == 'reservada' %}
+                                            <i class="fas fa-bookmark text-warning-emphasis"></i>
+                                        {% endif %}
+                                        {{ mesa.get_estado_display }}
+                                    </small>
+                                </p>
+                            
+                                {% if mesa.estado == 'ocupada' and mesa.venta_actual %}
+                                    <a href="{% url 'admin:ventas_venta_change' mesa.venta_actual.pk %}" 
+                                       class="btn btn-sm btn-outline-light mt-auto" 
+                                       target="_blank"
+                                       title="Ver Venta #{{ mesa.venta_actual.pk }}">
+                                       <i class="fas fa-eye"></i> Ver Venta
+                                    </a>
+                                {% elif mesa.estado == 'disponible' %}
+                                    <span class="mt-auto text-muted small">Clic para gestionar</span>
+                                {% elif mesa.estado == 'reservada' %}
+                                    <span class="mt-auto text-muted small">Clic para gestionar</span>
+                            {% endif %}
+                        </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    {% elif mesas %}
+        <!-- Fallback si no se agrupa por ubicación -->
+        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+            {% for mesa in mesas %}
+            <div class="col">
+                <a href="{% url 'gestion_mesas:gestionar_pedido_mesa' mesa_id=mesa.pk %}" class="text-decoration-none">
+                    <div class="card text-center shadow-sm mesa-card {{ mesa.color_class|default:'bg-light' }}"
+                         style="min-height: 150px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 0.5rem; transition: transform 0.2s ease-in-out;"
+                         onmouseover="this.style.transform='scale(1.03)';" 
+                         onmouseout="this.style.transform='scale(1)';">
+                        <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                            <h5 class="card-title fw-bold fs-4 mb-2">{{ mesa.numero_mesa }}</h5>
+                            <p class="card-text mb-1"><i class="fas fa-users"></i> Cap: {{ mesa.capacidad }}</p>
+                            <p class="card-text mb-2">
+                                <small>
+                                    {% if mesa.estado == 'disponible' %}
+                                        <i class="fas fa-check-circle text-success-emphasis"></i>
+                                    {% elif mesa.estado == 'ocupada' %}
+                                        <i class="fas fa-user-clock text-danger-emphasis"></i>
+                                    {% elif mesa.estado == 'reservada' %}
+                                        <i class="fas fa-bookmark text-warning-emphasis"></i>
+                                    {% endif %}
+                                    {{ mesa.get_estado_display }}
+                                </small>
+                            </p>
+                            {% if mesa.estado == 'ocupada' and mesa.venta_actual %}
+                                <a href="{% url 'admin:ventas_venta_change' mesa.venta_actual.pk %}" 
+                                   class="btn btn-sm btn-outline-light mt-auto" 
+                                   target="_blank"
+                                   title="Ver Venta #{{ mesa.venta_actual.pk }}">
+                                   <i class="fas fa-eye"></i> Ver Venta
+                                </a>
+                            {% else %}
+                                 <span class="mt-auto text-muted small">Clic para gestionar</span>
+                        {% endif %}
+                    </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="text-center">No hay mesas registradas.</p>
+    {% endif %}
+</div>
+
+<!-- Template filter para acceder a dict con variable (opcional, se puede hacer en la vista) -->
+{% comment %}
+Si no se puede usar |get_item (que es un custom filter que habría que crear),
+se puede pasar el color directamente en el contexto de cada mesa o iterar los colores en el CSS.
+Por simplicidad, asumo que `estado_colores|get_item:mesa.estado` funciona o se adapta.
+Alternativamente, en la vista, se podría añadir el color a cada objeto mesa.
+{% endcomment %}
+
+<style>
+    .mesa-card {
+        color: #fff; /* Color de texto por defecto para las tarjetas, ajustar si es necesario */
+    }
+    .mesa-card.bg-success .btn-outline-light:hover {
+        background-color: rgba(255,255,255,0.2);
+    }
+    .mesa-card.bg-danger .btn-outline-light:hover {
+        background-color: rgba(255,255,255,0.2);
+    }
+    .mesa-card.bg-warning { /* Texto oscuro para fondo amarillo */
+        color: #333;
+    }
+    .mesa-card.bg-warning .btn-outline-dark:hover {
+         background-color: rgba(0,0,0,0.1);
+    }
+
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Cualquier JS específico para el tablero de mesas.
+// Por ejemplo, para actualizar estados dinámicamente en el futuro (con AJAX/WebSockets).
+</script>
+{% endblock %}

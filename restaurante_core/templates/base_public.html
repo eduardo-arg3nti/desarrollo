@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Restaurante Core{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            padding-top: 4.5rem; /* Ajustado para la altura de la navbar */
+        }
+        .content-wrap { 
+            flex: 1; 
+        }
+        .footer { 
+            background-color: #f8f9fa; 
+            padding: 1.5rem 0; /* Aumentar padding vertical */
+            margin-top: auto; 
+            border-top: 1px solid #dee2e6; /* Borde superior sutil */
+            box-shadow: 0 -0.25rem 0.75rem rgba(0, 0, 0, 0.05); /* Sombra sutil */
+        }
+        /* Ajuste para que el container principal no sea siempre max-width 960px, 
+           sino que use más espacio si la plantilla hija lo necesita.
+           Las plantillas hijas pueden usar .container o .container-fluid */
+    </style>
+</head>
+<body>
+    <div class="content-wrap">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top shadow-sm">
+            <div class="container">
+                <a class="navbar-brand" href="{% url 'home' %}">
+                    <i class="fas fa-utensils"></i> Restaurante Core
+                </a>
+                <!-- Puedes añadir más elementos aquí si es necesario para una navbar pública -->
+            </div>
+        </nav>
+
+        <main class="container mt-4"> <!-- container es adecuado para login y páginas públicas simples -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            {% block content %}
+            <!-- Contenido específico de la página -->
+            {% endblock %}
+        </main>
+    </div>
+
+    <footer class="footer"> <!-- mt-auto ya no es necesario aquí por flex en body -->
+        <div class="container text-center">
+            <p class="text-muted mb-0">&copy; {% now "Y" %} Restaurante Core. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

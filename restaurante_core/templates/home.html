@@ -1,0 +1,70 @@
+{% extends "base.html" %} <!-- O base_public.html si esta página es accesible sin login -->
+
+{% block title %}Bienvenido a Restaurante Core{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="p-5 mb-4 bg-light rounded-3">
+        <div class="container-fluid py-5">
+            <h1 class="display-5 fw-bold">Bienvenido a Restaurante Core</h1>
+            <p class="col-md-8 fs-4">
+                Este es el sistema de gestión integral para su restaurante. 
+                Desde aquí podrá administrar el stock de productos, gestionar ventas por mostrador,
+                organizar las mesas y sus pedidos, y coordinar los envíos a domicilio.
+            </p>
+            
+            {% if user.is_authenticated %}
+                <p class="fs-5">Usted ha iniciado sesión como: <strong>{{ user.username }}</strong>.</p>
+                <p>Roles/Grupos:
+                    {% for group in user.groups.all %}
+                        <span class="badge bg-secondary">{{ group.name }}</span>
+                    {% empty %}
+                        <span class="badge bg-light text-dark">Sin grupos asignados</span>
+                    {% endfor %}
+                </p>
+                <hr>
+                <p>Seleccione una opción del menú de navegación para comenzar.</p>
+                <!-- Ejemplo de enlaces rápidos si el usuario está autenticado -->
+                <div class="d-flex gap-2 mt-4">
+                    {% if perms.stock.view_producto or user.is_superuser %} {# Asumiendo que se configuran permisos específicos #}
+                    <a href="{% url 'stock:producto_list' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-boxes"></i> Ir a Stock
+                    </a>
+                    {% endif %}
+                    {% if perms.gestion_mesas.view_mesa or user.is_superuser %}
+                    <a href="{% url 'gestion_mesas:tablero_mesas' %}" class="btn btn-info btn-lg">
+                        <i class="fas fa-tablet-alt"></i> Tablero de Mesas
+                    </a>
+                    {% endif %}
+                     <a href="{% url 'ventas:venta_mostrador' %}" class="btn btn-success btn-lg">
+                        <i class="fas fa-cash-register"></i> Venta Mostrador
+                    </a>
+                </div>
+            {% else %}
+                <p class="fs-5">Por favor, <a href="{% url 'login' %}?next={{ request.path }}">inicie sesión</a> para acceder a las funcionalidades del sistema.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not user.is_authenticated %}
+    <div class="row align-items-md-stretch">
+        <div class="col-md-6">
+            <div class="h-100 p-5 text-white bg-dark rounded-3">
+                <h2>¿Aún no tienes cuenta?</h2>
+                <p>Si eres un empleado nuevo, contacta al administrador para que te cree un usuario y te asigne los permisos correspondientes.</p>
+                <!-- <button class="btn btn-outline-light" type="button">Registrarse (Deshabilitado)</button> -->
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="h-100 p-5 bg-light border rounded-3">
+                <h2>Acceso Rápido</h2>
+                <p>Si ya tienes tus credenciales, puedes acceder directamente al sistema.</p>
+                <a href="{% url 'login' %}" class="btn btn-outline-secondary" type="button">
+                    <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

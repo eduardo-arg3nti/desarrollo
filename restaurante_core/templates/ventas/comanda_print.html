@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Comanda Pedido #{{ venta.pk }}</title>
+    <style>
+        body {
+            font-family: 'Courier New', Courier, monospace; /* Tipografía monoespaciada común en impresoras de tickets */
+            width: 280px; /* Ancho típico para impresora de tickets, ajustar según necesidad */
+            margin: 0 auto; /* Centrar si se ve en navegador */
+            padding: 10px;
+            font-size: 10pt; /* Tamaño de fuente base */
+            line-height: 1.3;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 14pt;
+            margin: 0;
+            text-transform: uppercase;
+        }
+        .header p {
+            margin: 2px 0;
+            font-size: 9pt;
+        }
+        .info-pedido {
+            margin-bottom: 10px;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 10px;
+        }
+        .info-pedido p {
+            margin: 3px 0;
+        }
+        .productos-lista table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .productos-lista th, .productos-lista td {
+            padding: 3px 0;
+            text-align: left;
+        }
+        .productos-lista th.cantidad, .productos-lista td.cantidad {
+            text-align: center;
+            width: 40px; /* Ancho para cantidad */
+        }
+        .productos-lista th.producto, .productos-lista td.producto {
+            /* El resto del ancho */
+        }
+        .productos-lista .item-separator td {
+            border-top: 1px dotted #ccc;
+            padding-top: 5px;
+            margin-top: 5px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 9pt;
+        }
+        .print-button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .print-button {
+            padding: 10px 20px;
+            font-size: 12pt;
+            cursor: pointer;
+        }
+
+        @media print {
+            body {
+                width: auto; /* Permitir que la impresora maneje el ancho */
+                margin: 0;
+                padding: 0;
+                font-size: 10pt; /* Ajustar si es necesario para la impresora */
+            }
+            .print-button-container {
+                display: none;
+            }
+            /* Opcional: forzar fondo blanco y texto negro */
+            * {
+                background: transparent !important;
+                color: #000 !important;
+                box-shadow: none !important;
+                text-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="comanda-content">
+        <div class="header">
+            <h1>Comanda</h1>
+            <p>Restaurante Core</p> <!-- Nombre del restaurante -->
+            <p>{{ venta.fecha_hora|date:"d/m/Y H:i:s" }}</p>
+        </div>
+
+        <div class="info-pedido">
+            <p><strong>Pedido ID:</strong> #{{ venta.pk }}</p>
+            <p><strong>Tipo:</strong> {{ venta.get_tipo_venta_display }}</p>
+            {% if venta.tipo_venta == 'mesa' and venta.mesa %}
+                <p><strong>Mesa:</strong> {{ venta.mesa.numero_mesa }}</p>
+            {% elif venta.tipo_venta == 'delivery' and venta.cliente_nombre %}
+                <p><strong>Cliente:</strong> {{ venta.cliente_nombre }}</p>
+                {% if venta.cliente_direccion %}
+                    <p><strong>Dirección:</strong> {{ venta.cliente_direccion }}</p>
+                {% endif %}
+                 {% if venta.cliente_telefono %}
+                    <p><strong>Teléfono:</strong> {{ venta.cliente_telefono }}</p>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="productos-lista">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="cantidad">Cant.</th>
+                        <th class="producto">Producto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in detalles %}
+                    <tr>
+                        <td class="cantidad">{{ detalle.cantidad }}x</td>
+                        <td class="producto">{{ detalle.producto.nombre }}</td>
+                    </tr>
+                    {% if detalle.notas %} {# Asumiendo un futuro campo 'notas' en DetalleVenta #}
+                    <tr>
+                        <td></td>
+                        <td style="font-size: 9pt; padding-left: 10px;"><em>↳ Notas: {{ detalle.notas }}</em></td>
+                    </tr>
+                    {% endif %}
+                    {% if not forloop.last %} {# Separador visual entre items, excepto para el último #}
+                    <tr class="item-separator"><td colspan="2"></td></tr>
+                    {% endif %}
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align:center;">(Pedido sin productos)</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer">
+            <p>¡Gracias!</p>
+        </div>
+    </div>
+
+    <div class="print-button-container">
+        <button class="print-button" onclick="window.print();">Imprimir Comanda</button>
+        <p><a href="javascript:window.close();">Cerrar Ventana</a></p>
+    </div>
+
+</body>
+</html>

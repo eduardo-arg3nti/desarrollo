@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Confirmación de Venta{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h2 class="mb-0">Venta Registrada Exitosamente</h2>
+                </div>
+                <div class="card-body">
+                    <p class="lead">La venta <strong>#{{ venta.pk }}</strong> ha sido registrada correctamente.</p>
+                    
+                    <h4 class="mt-4">Detalles de la Venta:</h4>
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item d-flex justify-content-between lh-condensed">
+                            <div>
+                                <h6 class="my-0">Tipo de Venta:</h6>
+                            </div>
+                            <span class="text-muted">{{ venta.get_tipo_venta_display }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between lh-condensed">
+                            <div>
+                                <h6 class="my-0">Fecha y Hora:</h6>
+                            </div>
+                            <span class="text-muted">{{ venta.fecha_hora|date:"d/m/Y H:i:s" }}</span>
+                        </li>
+                        {% if venta.cliente_nombre %}
+                        <li class="list-group-item d-flex justify-content-between lh-condensed">
+                            <div>
+                                <h6 class="my-0">Cliente:</h6>
+                            </div>
+                            <span class="text-muted">{{ venta.cliente_nombre }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <h5>Productos Vendidos:</h5>
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Producto</th>
+                                <th class="text-center">Cantidad</th>
+                                <th class="text-end">Precio Unit.</th>
+                                <th class="text-end">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for detalle in detalles %}
+                            <tr>
+                                <td>{{ detalle.producto.nombre }}</td>
+                                <td class="text-center">{{ detalle.cantidad }}</td>
+                                <td class="text-end">${{ detalle.precio_unitario_venta|floatformat:2 }}</td>
+                                <td class="text-end">${{ detalle.subtotal|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3" class="text-end">Total Venta:</th>
+                                <td class="text-end fw-bold">${{ venta.total_venta|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+
+                    <div class="mt-4 d-flex justify-content-between">
+                        <a href="{% url 'ventas:venta_mostrador' %}" class="btn btn-primary">
+                            <i class="fas fa-plus-circle"></i> Nueva Venta por Mostrador
+                        </a>
+                        <a href="{% url 'admin:ventas_venta_change' venta.pk %}" class="btn btn-outline-secondary btn-sm" target="_blank">
+                            <i class="fas fa-search"></i> Ver en Admin
+                        </a>
+                        <!-- Podría haber un botón para imprimir ticket aquí en el futuro -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Podría incluirse JS para imprimir el ticket automáticamente -->
+<script>
+    // Ejemplo: window.print(); 
+    // Esto imprimiría toda la página, se necesitaría una plantilla específica para ticket.
+</script>
+{% endblock %}

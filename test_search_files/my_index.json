@@ -1,0 +1,52 @@
+{
+    "inverted_index": {
+        "primer": [
+            1
+        ],
+        "documento": [
+            1,
+            2
+        ],
+        "habla": [
+            1
+        ],
+        "python": [
+            1,
+            2
+        ],
+        "desarrollo": [
+            1
+        ],
+        "web": [
+            1,
+            3
+        ],
+        "inteligencia": [
+            2
+        ],
+        "artificial": [
+            2
+        ],
+        "tercer": [
+            3
+        ],
+        "texto": [
+            3
+        ],
+        "menciona": [
+            3
+        ],
+        "algún": [
+            3
+        ],
+        "tema": [
+            3
+        ]
+    },
+    "documents": {
+        "1": "test_search_files/doc1.txt",
+        "2": "test_search_files/doc2.txt",
+        "3": "test_search_files/doc3.txt"
+    },
+    "next_doc_id": 3
+}
